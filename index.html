@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Page Title & Meta -->
+  <title>SIXORDLE Unlimited -- Solve 6 Wordles at the Same Time</title>
+  <meta name="description" content="Can you solve six 5-letter Wordles simultaneously in 11 guesses? Play unlimited puzzles with shared guesses and smart 6-stripe keyboard tracking!">
+  <meta name="keywords" content="sixordle, sixordle unlimited, 6 wordle, multi wordle, wordle variant, six wordles at the same time, hexordle, quordle, word puzzle">
+  <meta name="theme-color" content="#121213">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🟩</text></svg>">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="SIXORDLE Unlimited -- Solve 6 Wordles Simultaneously">
+  <meta property="og:description" content="Guess 6 words at once in 11 tries. Unlimited puzzles!">
+
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Floating Toast Notifications -->
+  <div id="toast-container"></div>
+
+  <!-- Header -->
+  <header>
+    <div class="header-left">
+      <button id="restart-btn" class="header-action-btn" title="Start a New Game" onclick="restartGame()">
+        <span>⟳</span> Restart
+      </button>
+    </div>
+
+    <div class="header-center">
+      <h1 class="logo">SIXORDLE</h1>
+      <div class="puzzle-subtitle">Unlimited Puzzles</div>
+    </div>
+
+    <div class="header-right">
+      <button id="stats-btn" class="icon-btn" title="Statistics" onclick="toggleStats()">📊</button>
+      <button id="help-btn" class="icon-btn" title="How to Play" onclick="toggleHelp()">?</button>
+    </div>
+  </header>
+
+  <!-- Mobile Responsive Board Tabs (visible on small screens) -->
+  <div id="board-nav-tabs" class="board-nav-tabs"></div>
+
+  <!-- Main Game Container -->
+  <main class="game-container">
+    <!-- 6 Wordle Boards Grid -->
+    <div id="boards-wrapper" class="boards-wrapper all-boards-view"></div>
+
+    <!-- Virtual Keyboard with 6-stripe background per key -->
+    <div id="keyboard-container" class="keyboard-container"></div>
+  </main>
+
+  <!-- How to Play Modal -->
+  <div id="help-modal" class="modal hidden">
+    <div class="modal-backdrop" onclick="toggleHelp()"></div>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>HOW TO PLAY</h2>
+        <button class="modal-close" onclick="toggleHelp()">✕</button>
+      </div>
+      <div class="modal-body">
+        <p>Solve all <strong>6 hidden words</strong> simultaneously in <strong>11 guesses</strong>.</p>
+        <p>Each guess must be a valid 5-letter word. Every guess evaluates across all 6 boards at the same time.</p>
+        
+        <div class="example-box">
+          <div class="example-row">
+            <div class="example-tile" style="background-color: var(--color-correct);">S</div>
+            <div class="example-tile" style="background-color: var(--color-absent);">L</div>
+            <div class="example-tile" style="background-color: var(--color-present);">A</div>
+            <div class="example-tile" style="background-color: var(--color-absent);">T</div>
+            <div class="example-tile" style="background-color: var(--color-absent);">E</div>
+          </div>
+          <p><strong>S</strong> is in the word and in the correct spot (Green).</p>
+          <p><strong>A</strong> is in the word but in the wrong spot (Yellow).</p>
+          <p><strong>L, T, E</strong> are not in the word (Grey).</p>
+        </div>
+
+        <p><strong>Board Locks:</strong> Once a board is completely solved (all 5 tiles green), it locks in and stops taking further guesses, allowing you to focus on the remaining open boards.</p>
+        <p><strong>6-Stripe Smart Keyboard:</strong> Each letter key is split into <strong>6 vertical columns</strong> corresponding directly to Boards 1 through 6 from left to right. You can immediately see which boards a letter is green, yellow, or eliminated on.</p>
+        <p><strong>Restart Anytime:</strong> Hit the <strong>Restart</strong> button in the header to spin up an instant fresh game.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Statistics & Game Over Modal -->
+  <div id="stats-modal" class="modal hidden">
+    <div class="modal-backdrop" onclick="toggleStats()"></div>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>STATISTICS</h2>
+        <button class="modal-close" onclick="toggleStats()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="stats-summary">
+          <div class="stat-item">
+            <div id="stat-played" class="stat-val">0</div>
+            <div class="stat-lbl">Played</div>
+          </div>
+          <div class="stat-item">
+            <div id="stat-win-rate" class="stat-val">0%</div>
+            <div class="stat-lbl">Win %</div>
+          </div>
+          <div class="stat-item">
+            <div id="stat-current-streak" class="stat-val">0</div>
+            <div class="stat-lbl">Current Streak</div>
+          </div>
+          <div class="stat-item">
+            <div id="stat-max-streak" class="stat-val">0</div>
+            <div class="stat-lbl">Max Streak</div>
+          </div>
+        </div>
+
+        <div class="dist-container">
+          <div class="dist-title">Guess Distribution</div>
+          <div id="guess-distribution"></div>
+        </div>
+
+        <!-- Revealed words upon game completion -->
+        <div id="solution-words-container" class="game-over-words" style="display: none;"></div>
+
+        <div class="modal-actions">
+          <button id="share-btn" class="btn-primary" onclick="shareResults()">
+            <span>Share Result</span> 📋
+          </button>
+          <button id="next-game-btn" class="btn-secondary" onclick="restartGame()">
+            New Game
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Fallback for no JS -->
+  <noscript>
+    <p style="color: white; text-align: center; padding: 40px;">
+      Sixordle requires JavaScript enabled to play.
+    </p>
+  </noscript>
+
+  <!-- Game Scripts -->
+  <script src="words.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>
